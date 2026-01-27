@@ -1,0 +1,39 @@
+<!-- Home View -->
+<div class="row">
+    <div class="col-12">
+        <div class="jumbotron bg-primary text-white p-5 rounded mb-4">
+            <h1 class="display-4">{{pageTitle}}</h1>
+            <p class="lead">{{message}}</p>
+            <hr class="my-4">
+            <p>Streamline your development process by converting functional requirements into strategic initiatives.</p>
+            <button class="btn btn-light btn-lg" ng-click="getStarted()">Get Started</button>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-4 mb-4" ng-repeat="feature in features">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <i class="{{feature.icon}} fa-3x mb-3 text-primary"></i>
+                <h5 class="card-title">{{feature.title}}</h5>
+                <p class="card-text">{{feature.description}}</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-5">
+    <div class="col-12">
+        <div class="alert alert-info">
+            <h4 class="alert-heading">Quick Start Guide</h4>
+            <p>Follow these simple steps to get started with FR to Initiative:</p>
+            <ol>
+                <li>Navigate to the <strong>Initiatives</strong> section</li>
+                <li>Add your functional requirements</li>
+                <li>Convert them into actionable initiatives</li>
+                <li>Track progress and manage your projects</li>
+            </ol>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,87 @@
+<!-- About View -->
+<div class="row">
+    <div class="col-12">
+        <h2>{{pageTitle}}</h2>
+        <p class="lead">{{appInfo.description}}</p>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Key Features</h5>
+            </div>
+            <div class="card-body">
+                <ul class="list-unstyled">
+                    <li ng-repeat="feature in appInfo.features" class="mb-2">
+                        <i class="fas fa-check-circle text-success me-2"></i>
+                        {{feature}}
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Technologies Used</h5>
+            </div>
+            <div class="card-body">
+                <ul class="list-unstyled">
+                    <li ng-repeat="tech in appInfo.technologies" class="mb-2">
+                        <i class="fas fa-code text-primary me-2"></i>
+                        {{tech}}
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Development Team</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4 mb-3" ng-repeat="member in teamMembers">
+                        <div class="text-center">
+                            <i class="fas fa-user-circle fa-3x text-secondary mb-2"></i>
+                            <h6>{{member.name}}</h6>
+                            <p class="text-muted small">{{member.role}}</p>
+                            <p class="small">{{member.description}}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Application Information</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-sm-6">
+                        <strong>Version:</strong> {{appInfo.version}}
+                    </div>
+                    <div class="col-sm-6">
+                        <strong>Build Date:</strong> January 2026
+                    </div>
+                </div>
+                <hr>
+                <p class="mb-0">
+                    <strong>Support:</strong> For technical support or feature requests, please contact the development team.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
