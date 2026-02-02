@@ -165,3 +165,143 @@ footer {
 @keyframes spin {
     to { transform: rotate(360deg); }
 }
+
+/* File Drop Zone Styles */
+.file-drop-zone {
+    border: 3px dashed #dee2e6;
+    border-radius: 0.75rem;
+    padding: 3rem 2rem;
+    text-align: center;
+    transition: all 0.3s ease-in-out;
+    cursor: pointer;
+    background-color: #f8f9fa;
+    min-height: 200px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.file-drop-zone:hover {
+    border-color: #667eea;
+    background-color: #f1f3ff;
+}
+
+.file-drop-zone.drag-over {
+    border-color: #667eea;
+    background-color: #e7ebff;
+    border-style: solid;
+    transform: scale(1.02);
+}
+
+.file-drop-zone i {
+    transition: color 0.3s ease-in-out;
+}
+
+.file-drop-zone:hover i,
+.file-drop-zone.drag-over i {
+    color: #667eea !important;
+}
+
+/* File processing states */
+.file-processing {
+    opacity: 0.7;
+    pointer-events: none;
+}
+
+/* Text area for converted content */
+.converted-text {
+    font-family: 'Courier New', monospace;
+    font-size: 0.9rem;
+    line-height: 1.5;
+    resize: vertical;
+}
+
+/* Animation for success state */
+.conversion-success {
+    animation: pulse 0.5s ease-in-out;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.02); }
+    100% { transform: scale(1); }
+}
+
+/* AI Generated Initiatives Styles */
+.ai-initiative-card {
+    transition: all 0.3s ease;
+    border-left: 4px solid #28a745;
+}
+
+.ai-initiative-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+}
+
+.jira-status-indicator {
+    animation: fadeIn 0.5s ease-in-out;
+}
+
+/* Enhanced button styles for JIRA integration */
+.btn-jira {
+    background: linear-gradient(135deg, #0052cc 0%, #0065ff 100%);
+    border: none;
+    color: white;
+}
+
+.btn-jira:hover {
+    background: linear-gradient(135deg, #004db8 0%, #0057e5 100%);
+    color: white;
+    transform: translateY(-1px);
+}
+
+/* Step indicator styles */
+.step-indicator {
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    margin-bottom: 1rem;
+}
+
+.step-active {
+    background-color: #28a745;
+    color: white;
+}
+
+.step-pending {
+    background-color: #6c757d;
+    color: white;
+}
+
+.step-complete {
+    background-color: #007bff;
+    color: white;
+}
+
+/* Requirements text area styling */
+.requirements-text {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-size: 0.95rem;
+    line-height: 1.6;
+    border: none;
+    resize: none;
+    background-color: #f8f9fa;
+}
+
+/* Enhanced card borders for different states */
+.border-ai-processing {
+    border-left: 4px solid #ffc107 !important;
+    animation: pulse 2s infinite;
+}
+
+.border-ai-complete {
+    border-left: 4px solid #28a745 !important;
+}
+
+.border-jira-ready {
+    border-left: 4px solid #0052cc !important;
+}

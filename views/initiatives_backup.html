@@ -1,0 +1,115 @@
+<!-- Initiatives View -->
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>{{pageTitle}}</h2>
+            <button class="btn btn-primary" ng-click="toggleAddForm()">
+                <i class="fas fa-plus me-2"></i>Add Initiative
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Add Initiative Form -->
+<div class="row" ng-show="showAddForm">
+    <div class="col-12">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Add New Initiative</h5>
+            </div>
+            <div class="card-body">
+                <form ng-submit="addInitiative()">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Title *</label>
+                            <input type="text" class="form-control" ng-model="newInitiative.title" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Priority</label>
+                            <select class="form-select" ng-model="newInitiative.priority">
+                                <option value="low">Low</option>
+                                <option value="medium" selected>Medium</option>
+                                <option value="high">High</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Description *</label>
+                        <textarea class="form-control" rows="3" ng-model="newInitiative.description" required></textarea>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Status</label>
+                            <select class="form-select" ng-model="newInitiative.status">
+                                <option value="planning" selected>Planning</option>
+                                <option value="in-progress">In Progress</option>
+                                <option value="completed">Completed</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Due Date</label>
+                            <input type="date" class="form-control" ng-model="newInitiative.dueDate">
+                        </div>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-success">Add Initiative</button>
+                        <button type="button" class="btn btn-secondary" ng-click="toggleAddForm()">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Initiatives List -->
+<div class="row">
+    <div class="col-12">
+        <div ng-if="initiatives.length === 0" class="alert alert-info">
+            <i class="fas fa-info-circle me-2"></i>
+            No initiatives found. Click "Add Initiative" to create your first one.
+        </div>
+        
+        <div class="card mb-3" ng-repeat="initiative in initiatives">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">{{initiative.title}}</h5>
+                <div class="d-flex gap-2 align-items-center">
+                    <span class="{{getStatusClass(initiative.status)}}">{{initiative.status}}</span>
+                    <div class="dropdown">
+                        <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                            Actions
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" ng-click="updateStatus(initiative, 'planning')">Set Planning</a></li>
+                            <li><a class="dropdown-item" ng-click="updateStatus(initiative, 'in-progress')">Set In Progress</a></li>
+                            <li><a class="dropdown-item" ng-click="updateStatus(initiative, 'completed')">Set Completed</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item text-danger" ng-click="deleteInitiative(initiative.id)">Delete</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <p class="card-text">{{initiative.description}}</p>
+                <div class="row">
+                    <div class="col-sm-6">
+                        <small class="text-muted">
+                            <i class="fas fa-calendar me-1"></i>
+                            Created: {{initiative.createdDate | date:'shortDate'}}
+                        </small>
+                    </div>
+                    <div class="col-sm-6" ng-if="initiative.dueDate">
+                        <small class="text-muted">
+                            <i class="fas fa-clock me-1"></i>
+                            Due: {{initiative.dueDate | date:'shortDate'}}
+                        </small>
+                    </div>
+                </div>
+                <div class="mt-2">
+                    <span class="badge" ng-class="{'bg-danger': initiative.priority === 'high', 'bg-warning': initiative.priority === 'medium', 'bg-info': initiative.priority === 'low'}">
+                        {{initiative.priority}} priority
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

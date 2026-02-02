@@ -3,9 +3,188 @@
     <div class="col-12">
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h2>{{pageTitle}}</h2>
-            <button class="btn btn-primary" ng-click="toggleAddForm()">
+            <button class="btn btn-primary" ng-click="toggleAddForm()" ng-hide="requirementsData">
                 <i class="fas fa-plus me-2"></i>Add Initiative
             </button>
+        </div>
+    </div>
+</div>
+
+<!-- AI Processing Section -->
+<div ng-show="requirementsData" class="row mb-4">
+    <div class="col-12">
+        <div class="card border-primary">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">
+                    <i class="fas fa-robot me-2"></i>
+                    AI-Powered Initiative Generation
+                </h4>
+            </div>
+            <div class="card-body">
+                <!-- Processing Status -->
+                <div ng-show="isProcessingAI" class="text-center py-4">
+                    <div class="spinner-border text-primary mb-3" role="status">
+                        <span class="visually-hidden">Processing...</span>
+                    </div>
+                    <h5>AI is analyzing your requirements...</h5>
+                    <p class="text-muted">Creating strategic initiatives based on your functional requirements and instructions.</p>
+                </div>
+                
+                <!-- Requirements Summary -->
+                <div ng-show="!isProcessingAI" class="row">
+                    <div class="col-md-4">
+                        <h6>Source Document</h6>
+                        <p><i class="fas fa-file-word text-primary me-2"></i>{{requirementsData.fileName}}</p>
+                        
+                        <h6>AI Instructions</h6>
+                        <div class="card bg-light">
+                            <div class="card-body p-3">
+                                <small>{{requirementsData.aiInstructions}}</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-8">
+                        <h6>Extracted Requirements</h6>
+                        <div class="card bg-light">
+                            <div class="card-body">
+                                <textarea class="form-control border-0 bg-light" 
+                                          rows="6" 
+                                          ng-model="requirementsData.requirements" 
+                                          readonly></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- AI Generated Initiatives -->
+<div ng-show="showAIResults" class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="fas fa-lightbulb me-2"></i>
+                    AI-Generated Initiatives
+                </h5>
+                <div>
+                    <button class="btn btn-light btn-sm me-2" ng-click="connectToJira()" ng-show="jiraConnectionStatus === 'disconnected'">
+                        <i class="fas fa-link me-1"></i>Connect to JIRA
+                    </button>
+                    <span ng-show="jiraConnectionStatus === 'connecting'" class="text-light">
+                        <i class="fas fa-spinner fa-spin me-1"></i>Connecting...
+                    </span>
+                    <div ng-show="jiraConnectionStatus === 'connected'" class="d-inline-flex align-items-center">
+                        <span class="text-light me-2">
+                            <i class="fas fa-check-circle me-1"></i>JIRA Connected
+                        </span>
+                        <button class="btn btn-light btn-sm me-2" ng-click="toggleJiraConfig()">
+                            <i class="fas fa-cog me-1"></i>Configure
+                        </button>
+                        <button class="btn btn-warning btn-sm" ng-click="createAllInJira()">
+                            <i class="fas fa-upload me-1"></i>Create All in JIRA
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <!-- JIRA Configuration Panel -->
+                <div ng-show="showJiraConfig && jiraConnectionStatus === 'connected'" class="alert alert-info mb-3">
+                    <h6><i class="fas fa-cog me-2"></i>JIRA Configuration</h6>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <label class="form-label">Select Project:</label>
+                            <select class="form-select form-select-sm" ng-model="selectedProject" 
+                                    ng-options="project as project.name for project in availableProjects track by project.key"
+                                    ng-change="selectProject(selectedProject)">
+                                <option value="">Choose a project...</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6" ng-show="selectedProject">
+                            <label class="form-label">Issue Type:</label>
+                            <select class="form-select form-select-sm" ng-model="selectedIssueType">
+                                <option ng-repeat="type in availableIssueTypes" value="{{type.name}}">{{type.name}}</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mt-2" ng-show="selectedProject">
+                        <small class="text-muted">
+                            <i class="fas fa-info-circle me-1"></i>
+                            Selected: <strong>{{selectedProject.name}} ({{selectedProject.key}})</strong> - Issue Type: <strong>{{selectedIssueType}}</strong>
+                        </small>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-lg-6 col-xl-4 mb-4" ng-repeat="initiative in aiGeneratedInitiatives">
+                        <div class="card h-100 border-2" ng-class="{'border-success': initiative.jiraStatus === 'created', 'border-warning': initiative.jiraStatus === 'creating'}">
+                            <div class="card-header">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <h6 class="mb-0">{{initiative.title}}</h6>
+                                    <span class="badge" ng-class="initiative.priority === 'High' ? 'bg-danger' : (initiative.priority === 'Medium' ? 'bg-warning' : 'bg-info')">
+                                        {{initiative.priority}}
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <p class="card-text small">{{initiative.description}}</p>
+                                
+                                <div class="mb-2">
+                                    <strong>Type:</strong> <span class="badge bg-primary">{{initiative.type}}</span>
+                                    <strong class="ms-2">Effort:</strong> <small class="text-muted">{{initiative.estimatedEffort}}</small>
+                                </div>
+                                
+                                <!-- Requirements -->
+                                <div class="mb-2">
+                                    <strong>Key Requirements:</strong>
+                                    <ul class="small mt-1">
+                                        <li ng-repeat="req in initiative.requirements">{{req}}</li>
+                                    </ul>
+                                </div>
+                                
+                                <!-- JIRA Status -->
+                                <div ng-show="initiative.jiraStatus" class="mb-2">
+                                    <span class="badge" ng-class="getJiraStatusClass(initiative.jiraStatus)">
+                                        <i class="fas" ng-class="initiative.jiraStatus === 'created' ? 'fa-check-circle' : (initiative.jiraStatus === 'creating' ? 'fa-spinner fa-spin' : 'fa-exclamation-triangle')"></i>
+                                        <span ng-show="initiative.jiraStatus === 'creating'">Creating in JIRA...</span>
+                                        <span ng-show="initiative.jiraStatus === 'created'">JIRA: {{initiative.jiraKey}}</span>
+                                        <span ng-show="initiative.jiraStatus === 'error'">Creation Failed</span>
+                                    </span>
+                                    <div ng-show="initiative.jiraUrl && initiative.jiraStatus === 'created'" class="mt-1">
+                                        <a href="#" ng-click="openJiraIssue(initiative.jiraUrl)" class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-external-link-alt me-1"></i>Open in JIRA
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="card-footer">
+                                <div class="btn-group w-100" role="group">
+                                    <button class="btn btn-outline-primary btn-sm" ng-click="addToLocal(initiative)">
+                                        <i class="fas fa-plus me-1"></i>Add Local
+                                    </button>
+                                    <button class="btn btn-outline-success btn-sm" 
+                                            ng-click="createInJira(initiative)" 
+                                            ng-show="jiraConnectionStatus === 'connected' && selectedProject && !initiative.jiraStatus"
+                                            ng-disabled="!selectedProject">
+                                        <i class="fas fa-upload me-1"></i>To JIRA
+                                    </button>
+                                    <button class="btn btn-outline-warning btn-sm" 
+                                            ng-click="createInJira(initiative)" 
+                                            ng-show="jiraConnectionStatus === 'connected' && !selectedProject && !initiative.jiraStatus">
+                                        <i class="fas fa-exclamation-triangle me-1"></i>Select Project
+                                    </button>
+                                    <span class="btn btn-outline-secondary btn-sm" 
+                                          ng-show="initiative.jiraStatus === 'created'">
+                                        <i class="fas fa-check me-1"></i>In JIRA
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </div>
@@ -52,8 +231,12 @@
                         </div>
                     </div>
                     <div class="d-flex gap-2">
-                        <button type="submit" class="btn btn-success">Add Initiative</button>
-                        <button type="button" class="btn btn-secondary" ng-click="toggleAddForm()">Cancel</button>
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-save me-2"></i>Save Initiative
+                        </button>
+                        <button type="button" class="btn btn-secondary" ng-click="toggleAddForm()">
+                            Cancel
+                        </button>
                     </div>
                 </form>
             </div>
@@ -61,55 +244,71 @@
     </div>
 </div>
 
-<!-- Initiatives List -->
-<div class="row">
+<!-- Existing Initiatives List -->
+<div class="row" ng-show="initiatives.length > 0">
     <div class="col-12">
-        <div ng-if="initiatives.length === 0" class="alert alert-info">
-            <i class="fas fa-info-circle me-2"></i>
-            No initiatives found. Click "Add Initiative" to create your first one.
-        </div>
-        
-        <div class="card mb-3" ng-repeat="initiative in initiatives">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <h5 class="mb-0">{{initiative.title}}</h5>
-                <div class="d-flex gap-2 align-items-center">
-                    <span class="{{getStatusClass(initiative.status)}}">{{initiative.status}}</span>
-                    <div class="dropdown">
-                        <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                            Actions
-                        </button>
-                        <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" ng-click="updateStatus(initiative, 'planning')">Set Planning</a></li>
-                            <li><a class="dropdown-item" ng-click="updateStatus(initiative, 'in-progress')">Set In Progress</a></li>
-                            <li><a class="dropdown-item" ng-click="updateStatus(initiative, 'completed')">Set Completed</a></li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item text-danger" ng-click="deleteInitiative(initiative.id)">Delete</a></li>
-                        </ul>
-                    </div>
-                </div>
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-list me-2"></i>
+                    Current Initiatives ({{initiatives.length}})
+                </h5>
             </div>
             <div class="card-body">
-                <p class="card-text">{{initiative.description}}</p>
                 <div class="row">
-                    <div class="col-sm-6">
-                        <small class="text-muted">
-                            <i class="fas fa-calendar me-1"></i>
-                            Created: {{initiative.createdDate | date:'shortDate'}}
-                        </small>
+                    <div class="col-lg-6 col-xl-4 mb-3" ng-repeat="initiative in initiatives">
+                        <div class="card h-100">
+                            <div class="card-header">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <h6 class="mb-0">{{initiative.title}}</h6>
+                                    <span ng-class="getStatusClass(initiative.status)">{{initiative.status}}</span>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <p class="card-text">{{initiative.description}}</p>
+                                <small class="text-muted">
+                                    <i class="fas fa-flag me-1"></i>Priority: {{initiative.priority}}
+                                </small>
+                                <div ng-show="initiative.dueDate" class="mt-2">
+                                    <small class="text-muted">
+                                        <i class="fas fa-calendar me-1"></i>Due: {{initiative.dueDate | date}}
+                                    </small>
+                                </div>
+                            </div>
+                            <div class="card-footer">
+                                <div class="btn-group w-100" role="group">
+                                    <button class="btn btn-sm btn-outline-primary dropdown-toggle" 
+                                            data-bs-toggle="dropdown" aria-expanded="false">
+                                        Status
+                                    </button>
+                                    <ul class="dropdown-menu">
+                                        <li><a class="dropdown-item" href="#" ng-click="updateStatus(initiative, 'planning')">Planning</a></li>
+                                        <li><a class="dropdown-item" href="#" ng-click="updateStatus(initiative, 'in-progress')">In Progress</a></li>
+                                        <li><a class="dropdown-item" href="#" ng-click="updateStatus(initiative, 'completed')">Completed</a></li>
+                                    </ul>
+                                    <button class="btn btn-sm btn-outline-danger" ng-click="deleteInitiative(initiative.id)">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    <div class="col-sm-6" ng-if="initiative.dueDate">
-                        <small class="text-muted">
-                            <i class="fas fa-clock me-1"></i>
-                            Due: {{initiative.dueDate | date:'shortDate'}}
-                        </small>
-                    </div>
-                </div>
-                <div class="mt-2">
-                    <span class="badge" ng-class="{'bg-danger': initiative.priority === 'high', 'bg-warning': initiative.priority === 'medium', 'bg-info': initiative.priority === 'low'}">
-                        {{initiative.priority}} priority
-                    </span>
                 </div>
             </div>
+        </div>
+    </div>
+</div>
+
+<!-- Empty State -->
+<div class="row" ng-show="initiatives.length === 0 && !requirementsData">
+    <div class="col-12">
+        <div class="text-center py-5">
+            <i class="fas fa-lightbulb fa-4x text-muted mb-3"></i>
+            <h4 class="text-muted">No initiatives yet</h4>
+            <p class="text-muted">Start by uploading a requirements document on the home page, or add an initiative manually.</p>
+            <a href="#/home" class="btn btn-primary">
+                <i class="fas fa-home me-2"></i>Go to Home
+            </a>
         </div>
     </div>
 </div>

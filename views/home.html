@@ -6,12 +6,102 @@
             <p class="lead">{{message}}</p>
             <hr class="my-4">
             <p>Streamline your development process by converting functional requirements into strategic initiatives.</p>
-            <button class="btn btn-light btn-lg" ng-click="getStarted()">Get Started</button>
+            
+            <!-- Step 1: File Drop Zone (replacing Get Started button) -->
+            <div class="file-drop-zone bg-white text-dark rounded p-4 mt-4" 
+                 ng-class="{'drag-over': isDragOver}"
+                 ng-drop="onFileDropped($event, $data)" 
+                 ng-drag-enter="onDragEnter($event)"
+                 ng-drag-leave="onDragLeave($event)"
+                 ng-drag-over="onDragOver($event)">
+                
+                <div class="text-center">
+                    <i class="fas fa-file-word fa-3x text-primary mb-3"></i>
+                    <h5 class="text-dark">Drop your Word document to get started</h5>
+                    <p class="text-muted mb-3">or click to browse for functional requirements document</p>
+                    
+                    <!-- File Input -->
+                    <input type="file" 
+                           id="fileInput" 
+                           accept=".doc,.docx"
+                           style="display: none;"
+                           ng-file-select="onFileSelected($files)">
+                    
+                    <button class="btn btn-outline-primary" ng-click="openFileDialog()">
+                        <i class="fas fa-folder-open me-2"></i>
+                        Browse Files
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Processing Indicator -->
+            <div ng-show="isProcessing" class="text-center mt-4">
+                <div class="spinner-border text-light" role="status">
+                    <span class="visually-hidden">Processing...</span>
+                </div>
+                <p class="mt-2">Processing your document...</p>
+            </div>
         </div>
     </div>
 </div>
 
-<div class="row">
+<!-- Step 2: LLM Instructions (shown after file upload) -->
+<div class="row" ng-show="convertedText && !isProcessing">
+    <div class="col-12">
+        <div class="card shadow-lg">
+            <div class="card-header bg-success text-white">
+                <h4 class="mb-0">
+                    <i class="fas fa-robot me-2"></i>
+                    Step 2: Provide Additional Instructions for AI Processing
+                </h4>
+            </div>
+            <div class="card-body p-4">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Extracted Requirements</h6>
+                        <div class="card bg-light">
+                            <div class="card-body">
+                                <textarea class="form-control border-0 bg-light" 
+                                          rows="8" 
+                                          ng-model="convertedText" 
+                                          readonly
+                                          placeholder="Your document content will appear here...">
+                                </textarea>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Additional Instructions for AI</h6>
+                        <textarea class="form-control" 
+                                  rows="8" 
+                                  ng-model="aiInstructions"
+                                  placeholder="Provide specific instructions for how you want the AI to process these requirements into initiatives. For example:
+
+• Focus on technical initiatives only
+• Group related requirements together
+• Prioritize based on business impact
+• Include estimated effort levels
+• Consider dependencies between initiatives
+• Format as JIRA epics and stories">
+                        </textarea>
+                        
+                        <div class="mt-3">
+                            <button class="btn btn-primary btn-lg" 
+                                    ng-click="proceedToInitiatives()"
+                                    ng-disabled="!aiInstructions.trim()">
+                                <i class="fas fa-arrow-right me-2"></i>
+                                Process & Create Initiatives
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Original Feature Cards -->
+<div class="row mt-5">
     <div class="col-md-4 mb-4" ng-repeat="feature in features">
         <div class="card h-100">
             <div class="card-body text-center">
@@ -23,17 +113,31 @@
     </div>
 </div>
 
+<!-- Quick Start Guide -->
 <div class="row mt-5">
     <div class="col-12">
         <div class="alert alert-info">
-            <h4 class="alert-heading">Quick Start Guide</h4>
-            <p>Follow these simple steps to get started with FR to Initiative:</p>
+            <h4 class="alert-heading">How It Works</h4>
+            <p>Follow these simple steps to convert your functional requirements into JIRA initiatives:</p>
             <ol>
-                <li>Navigate to the <strong>Initiatives</strong> section</li>
-                <li>Add your functional requirements</li>
-                <li>Convert them into actionable initiatives</li>
-                <li>Track progress and manage your projects</li>
+                <li><strong>Upload Document:</strong> Drop your Word document containing functional requirements above</li>
+                <li><strong>Add AI Instructions:</strong> Provide specific guidance on how to process the requirements</li>
+                <li><strong>Review & Create:</strong> AI will process your requirements and create JIRA initiatives</li>
+                <li><strong>Track Progress:</strong> Manage and track your initiatives in JIRA</li>
             </ol>
+        </div>
+    </div>
+</div>
+
+<!-- Error Section -->
+<div ng-show="errorMessage" class="row mt-4">
+    <div class="col-12">
+        <div class="alert alert-danger">
+            <h6 class="alert-heading">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                Upload Error
+            </h6>
+            <p class="mb-0">{{errorMessage}}</p>
         </div>
     </div>
 </div>
