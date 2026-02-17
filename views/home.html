@@ -7,30 +7,67 @@
             <hr class="my-4">
             <p>Streamline your development process by converting functional requirements into strategic initiatives.</p>
             
-            <!-- Step 1: File Drop Zone (replacing Get Started button) -->
-            <div class="file-drop-zone bg-white text-dark rounded p-4 mt-4" 
-                 ng-class="{'drag-over': isDragOver}"
-                 ng-drop="onFileDropped($event, $data)" 
+            <!-- Step 1: Enhanced File Drop Zone -->
+            <div class="file-drop-zone bg-white text-dark rounded p-4 mt-4 position-relative" 
+                 ng-class="{'drag-over': isDragOver, 'drag-active': isDragOver, 'file-upload-success': uploadSuccess}"
+                 ng-drop="onFileDropped($event)" 
                  ng-drag-enter="onDragEnter($event)"
                  ng-drag-leave="onDragLeave($event)"
-                 ng-drag-over="onDragOver($event)">
+                 ng-drag-over="onDragOver($event)"
+                 tabindex="0"
+                 ng-keypress="onKeyPress($event)"
+                 role="button"
+                 aria-label="Drop files here or click to browse"
+                 style="min-height: 200px; border: 2px dashed #007bff; transition: all 0.3s ease;">
                 
-                <div class="text-center">
-                    <i class="fas fa-file-word fa-3x text-primary mb-3"></i>
-                    <h5 class="text-dark">Drop your Word document to get started</h5>
-                    <p class="text-muted mb-3">or click to browse for functional requirements document</p>
+                <div class="text-center d-flex flex-column justify-content-center h-100">
+                    <i class="fas fa-cloud-upload-alt fa-4x text-primary mb-3" 
+                       ng-class="{'fa-bounce': isDragOver}"></i>
+                    
+                    <h5 class="text-dark mb-2" ng-show="!isDragOver">
+                        Drop your document here to get started
+                    </h5>
+                    <h5 class="text-success mb-2" ng-show="isDragOver">
+                        <i class="fas fa-check-circle me-2"></i>Release to upload
+                    </h5>
+                    
+                    <p class="text-muted mb-3">
+                        Supports: Word (.doc, .docx), PDF, and Text files
+                        <br>
+                        <small>Maximum file size: 10MB</small>
+                    </p>
                     
                     <!-- File Input -->
                     <input type="file" 
                            id="fileInput" 
-                           accept=".doc,.docx"
+                           accept=".doc,.docx,.txt,.pdf"
                            style="display: none;"
                            ng-file-select="onFileSelected($files)">
                     
-                    <button class="btn btn-outline-primary" ng-click="openFileDialog()">
-                        <i class="fas fa-folder-open me-2"></i>
-                        Browse Files
-                    </button>
+                    <div>
+                        <button class="btn btn-outline-primary btn-lg" 
+                                ng-click="openFileDialog()"
+                                ng-disabled="isProcessing">
+                            <i class="fas fa-folder-open me-2"></i>
+                            Browse Files
+                        </button>
+                    </div>
+                    
+                    <!-- Error Display -->
+                    <div ng-show="errorMessage" class="alert alert-danger mt-3 mb-0">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        {{errorMessage}}
+                    </div>
+                </div>
+                
+                <!-- Drag Overlay -->
+                <div ng-show="isDragOver" 
+                     class="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center"
+                     style="background: rgba(0, 123, 255, 0.1); backdrop-filter: blur(2px); border-radius: 0.375rem;">
+                    <div class="text-center">
+                        <i class="fas fa-download fa-3x text-success mb-2"></i>
+                        <h4 class="text-success">Drop file to upload</h4>
+                    </div>
                 </div>
             </div>
             

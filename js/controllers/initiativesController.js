@@ -20,6 +20,12 @@ angular.module('frInitiativeApp')
         $scope.selectedIssueType = 'Initiative';
         $scope.showJiraConfig = false;
         
+        // Drag and drop variables for additional file uploads
+        $scope.isDragOver = false;
+        $scope.isProcessingNewFile = false;
+        $scope.uploadErrorMessage = '';
+        $scope.showFileUpload = false;
+        
         // Initialize
         $scope.init = function() {
             $scope.initiatives = InitiativeService.getAllInitiatives();
@@ -133,9 +139,9 @@ angular.module('frInitiativeApp')
         $scope.connectToJira = function() {
             $scope.jiraConnectionStatus = 'connecting';
             
-            JiraService.getMockProjects().then(
+            JiraService.getProjects().then(
                 function(response) {
-                    $scope.availableProjects = response.data.values;
+                    $scope.availableProjects = response.data.values || response.data;
                     $scope.jiraConnectionStatus = 'connected';
                     $scope.showJiraConfig = true;
                 },
@@ -152,14 +158,29 @@ angular.module('frInitiativeApp')
             $scope.selectedProject = project;
             JiraService.setSelectedProject(project);
             
-            // Load issue types for selected project (using mock data)
-            $scope.availableIssueTypes = [
-                { name: 'Initiative', description: 'A large feature or effort with multiple Epics spans multiple Projects.' },
-                { name: 'Epic', description: 'A big user story that needs to be broken down.' },
-                { name: 'Story', description: 'Stories track functionality or features expressed as user goals.' },
-                { name: 'Task', description: 'A small, distinct piece of work.' },
-                { name: 'Feature', description: 'A new feature or functionality.' }
-            ];
+            // Load issue types for selected project
+            JiraService.getIssueTypes(project.key).then(
+                function(response) {
+                    $scope.availableIssueTypes = response.data.values || response.data || [
+                        { name: 'Initiative', description: 'A large feature or effort with multiple Epics spans multiple Projects.' },
+                        { name: 'Epic', description: 'A big user story that needs to be broken down.' },
+                        { name: 'Story', description: 'Stories track functionality or features expressed as user goals.' },
+                        { name: 'Task', description: 'A small, distinct piece of work.' },
+                        { name: 'Feature', description: 'A new feature or functionality.' }
+                    ];
+                },
+                function(error) {
+                    console.error('Failed to load issue types:', error);
+                    // Use default issue types if API fails
+                    $scope.availableIssueTypes = [
+                        { name: 'Initiative', description: 'A large feature or effort with multiple Epics spans multiple Projects.' },
+                        { name: 'Epic', description: 'A big user story that needs to be broken down.' },
+                        { name: 'Story', description: 'Stories track functionality or features expressed as user goals.' },
+                        { name: 'Task', description: 'A small, distinct piece of work.' },
+                        { name: 'Feature', description: 'A new feature or functionality.' }
+                    ];
+                }
+            );
         };
         
         // Create initiative in JIRA
@@ -281,6 +302,137 @@ angular.module('frInitiativeApp')
                 case 'planning': return 'badge bg-info';
                 default: return 'badge bg-secondary';
             }
+        };
+        
+        // Drag and drop functionality for additional files
+        $scope.toggleFileUpload = function() {
+            $scope.showFileUpload = !$scope.showFileUpload;
+            $scope.uploadErrorMessage = '';
+        };
+        
+        $scope.openAdditionalFileDialog = function() {
+            document.getElementById('additionalFileInput').click();
+        };
+        
+        $scope.onAdditionalFileSelected = function(files) {
+            if (files && files.length > 0) {
+                $scope.processAdditionalFile(files[0]);
+            }
+        };
+        
+        // Enhanced drag and drop handlers for initiatives page
+        $scope.onDragEnterAdditional = function(event) {
+            event.preventDefault();
+            event.stopPropagation();
+            $scope.isDragOver = true;
+            $scope.uploadErrorMessage = '';
+            $scope.$apply();
+        };
+        
+        $scope.onDragLeaveAdditional = function(event) {
+            event.preventDefault();
+            event.stopPropagation();
+            
+            if (!event.currentTarget.contains(event.relatedTarget)) {
+                $scope.isDragOver = false;
+                $scope.$apply();
+            }
+        };
+        
+        $scope.onDragOverAdditional = function(event) {
+            event.preventDefault();
+            event.stopPropagation();
+            
+            if (event.dataTransfer.items && event.dataTransfer.items.length > 0) {
+                var item = event.dataTransfer.items[0];
+                if (item.kind === 'file') {
+                    var fileName = item.getAsFile()?.name || '';
+                    if (fileName && !fileName.match(/\.(doc|docx|txt|pdf)$/i)) {
+                        event.dataTransfer.dropEffect = 'none';
+                        return false;
+                    }
+                }
+            }
+            
+            event.dataTransfer.dropEffect = 'copy';
+            return false;
+        };
+        
+        $scope.onFileDroppedAdditional = function(event) {
+            event.preventDefault();
+            event.stopPropagation();
+            $scope.isDragOver = false;
+            
+            var files = event.dataTransfer.files;
+            
+            if (files.length === 0) {
+                $scope.uploadErrorMessage = 'No files detected. Please try again.';
+                $scope.$apply();
+                return;
+            }
+            
+            if (files.length > 1) {
+                $scope.uploadErrorMessage = 'Please drop only one file at a time.';
+                $scope.$apply();
+                return;
+            }
+            
+            $scope.processAdditionalFile(files[0]);
+            $scope.$apply();
+        };
+        
+        // Process additional uploaded file
+        $scope.processAdditionalFile = function(file) {
+            $scope.uploadErrorMessage = '';
+            
+            // Validate file type
+            if (!file.name.match(/\.(doc|docx|txt|pdf)$/i)) {
+                $scope.uploadErrorMessage = 'Please select a supported document (.doc, .docx, .txt, or .pdf file).';
+                $scope.$apply();
+                return;
+            }
+            
+            // Validate file size (10MB limit)
+            if (file.size > 10 * 1024 * 1024) {
+                $scope.uploadErrorMessage = 'File size must be less than 10MB.';
+                $scope.$apply();
+                return;
+            }
+            
+            $scope.isProcessingNewFile = true;
+            
+            // Simulate file processing and add to existing initiatives
+            setTimeout(function() {
+                $scope.$apply(function() {
+                    $scope.isProcessingNewFile = false;
+                    
+                    // Create additional initiatives from the new file
+                    var newInitiatives = [
+                        {
+                            title: 'Additional Requirements from ' + file.name,
+                            description: 'New requirements extracted from uploaded document: ' + file.name,
+                            priority: 'Medium',
+                            estimatedEffort: '2-4 weeks',
+                            type: 'Feature',
+                            requirements: ['New functionality', 'Integration requirements', 'Performance updates'],
+                            acceptanceCriteria: [
+                                'Requirements from ' + file.name + ' are implemented',
+                                'System integrates with new specifications',
+                                'Performance meets updated standards'
+                            ]
+                        }
+                    ];
+                    
+                    // Add to existing AI generated initiatives
+                    $scope.aiGeneratedInitiatives = $scope.aiGeneratedInitiatives.concat(newInitiatives);
+                    
+                    // Show success message
+                    alert('Successfully processed ' + file.name + ' and added new initiative(s)!');
+                    
+                    // Hide the upload area
+                    $scope.showFileUpload = false;
+                });
+            }, 2000);
         };
         
         // Initialize controller

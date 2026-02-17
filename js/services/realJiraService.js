@@ -1,10 +1,10 @@
-// Real JIRA Integration Service using MCP Atlassian Tools
-// This service demonstrates real JIRA integration using available MCP tools
+// Real JIRA Integration Service
+// This service connects to the backend API for real JIRA integration
 
 angular.module('frInitiativeApp')
-    .service('RealJiraService', function() {
+    .service('RealJiraService', function($http) {
         var self = this;
-        var CLOUD_ID = '2604d8a6-7a83-454a-abcc-2cd164d90231';
+        var API_BASE_URL = '/api/jira';
         var selectedProject = null;
         var availableProjects = [];
         
@@ -17,19 +17,46 @@ angular.module('frInitiativeApp')
             return selectedProject;
         };
         
-        // Real JIRA API integration using MCP tools
-        // Note: In a real implementation, these would be backend API calls that use MCP tools
-        
+        // Real JIRA API integration via backend
         this.createJiraIssue = function(initiative, projectKey, issueType) {
-            // This would be implemented in your backend using:
-            // mcp_atlassian_atl_createJiraIssue
-            
             var issueData = {
                 projectKey: projectKey,
-                issueTypeName: issueType || 'Initiative',
+                issueType: issueType || 'Task',
                 summary: initiative.title,
-                description: this.formatDescription(initiative)
+                description: this.formatDescription(initiative),
+                priority: this.mapPriorityToJira(initiative.priority)
             };
             
-            // Mock the API call for demonstration
-            return new Promise(function(resolve, reject) {\n                // In real implementation, make HTTP request to backend:\n                // POST /api/jira/create-issue\n                // Backend would then call: mcp_atlassian_atl_createJiraIssue(CLOUD_ID, projectKey, issueType, summary, description)\n                \n                setTimeout(function() {\n                    var mockResponse = {\n                        key: projectKey + '-' + Math.floor(Math.random() * 1000 + 100),\n                        id: Math.floor(Math.random() * 10000),\n                        url: 'https://mistech.atlassian.net/browse/' + projectKey + '-' + Math.floor(Math.random() * 1000 + 100)\n                    };\n                    resolve({ data: mockResponse });\n                }, 1000);\n            });\n        };\n        \n        this.getProjects = function() {\n            // This would call your backend endpoint that uses:\n            // mcp_atlassian_atl_getVisibleJiraProjects(CLOUD_ID)\n            \n            return new Promise(function(resolve, reject) {\n                // Mock data - in real implementation, fetch from backend\n                var projects = [\n                    { key: 'A360', name: 'Analyst 360', id: '11803' },\n                    { key: 'ACES', name: 'Aces', id: '10018' },\n                    { key: 'AGILETEST', name: 'Agile-Test-Project', id: '10002' },\n                    { key: 'CHEETAHS', name: 'Cheetahs', id: '10791' },\n                    { key: 'CALCENG', name: 'Calculations Engine', id: '11813' }\n                ];\n                \n                setTimeout(function() {\n                    availableProjects = projects;\n                    resolve({ data: { values: projects } });\n                }, 500);\n            });\n        };\n        \n        this.getIssueTypes = function(projectKey) {\n            // This would call:\n            // mcp_atlassian_atl_getJiraProjectIssueTypesMetadata(CLOUD_ID, projectKey)\n            \n            return new Promise(function(resolve, reject) {\n                var issueTypes = [\n                    { name: 'Initiative', description: 'A large feature or effort with multiple Epics spans multiple Projects.' },\n                    { name: 'Epic', description: 'A big user story that needs to be broken down.' },\n                    { name: 'Story', description: 'Stories track functionality or features expressed as user goals.' },\n                    { name: 'Task', description: 'A small, distinct piece of work.' },\n                    { name: 'Feature', description: 'A new feature or functionality.' }\n                ];\n                \n                setTimeout(function() {\n                    resolve({ data: { values: issueTypes } });\n                }, 300);\n            });\n        };\n        \n        this.formatDescription = function(initiative) {\n            var description = initiative.description;\n            \n            if (initiative.requirements && initiative.requirements.length > 0) {\n                description += '\\n\\n*Requirements:*\\n';\n                initiative.requirements.forEach(function(req) {\n                    description += '* ' + req + '\\n';\n                });\n            }\n            \n            if (initiative.acceptanceCriteria && initiative.acceptanceCriteria.length > 0) {\n                description += '\\n*Acceptance Criteria:*\\n';\n                initiative.acceptanceCriteria.forEach(function(criteria) {\n                    description += '* ' + criteria + '\\n';\n                });\n            }\n            \n            if (initiative.estimatedEffort) {\n                description += '\\n*Estimated Effort:* ' + initiative.estimatedEffort;\n            }\n            \n            return description;\n        };\n        \n        this.mapPriorityToJira = function(priority) {\n            switch(priority && priority.toLowerCase()) {\n                case 'high': return 'High';\n                case 'medium': return 'Medium';\n                case 'low': return 'Low';\n                default: return 'Medium';\n            }\n        };\n    });\n\n/*\nBACKEND IMPLEMENTATION GUIDE:\n\nTo implement real JIRA integration in your backend, create these API endpoints:\n\n1. GET /api/jira/projects\n   - Calls: mcp_atlassian_atl_getVisibleJiraProjects(CLOUD_ID)\n   - Returns: List of accessible JIRA projects\n\n2. GET /api/jira/projects/:projectKey/issuetypes\n   - Calls: mcp_atlassian_atl_getJiraProjectIssueTypesMetadata(CLOUD_ID, projectKey)\n   - Returns: Available issue types for the project\n\n3. POST /api/jira/create-issue\n   - Calls: mcp_atlassian_atl_createJiraIssue(CLOUD_ID, projectKey, issueTypeName, summary, description)\n   - Returns: Created issue details (key, id, url)\n\n4. GET /api/jira/issues/:issueKey\n   - Calls: mcp_atlassian_atl_getJiraIssue(CLOUD_ID, issueKey)\n   - Returns: Issue details\n\n5. PUT /api/jira/issues/:issueKey\n   - Calls: mcp_atlassian_atl_editJiraIssue(CLOUD_ID, issueKey, fields)\n   - Returns: Updated issue\n\nExample Node.js backend endpoint:\n\napp.post('/api/jira/create-issue', async (req, res) => {\n    try {\n        const { projectKey, issueTypeName, summary, description } = req.body;\n        \n        const result = await mcpClient.call('mcp_atlassian_atl_createJiraIssue', {\n            cloudId: CLOUD_ID,\n            projectKey: projectKey,\n            issueTypeName: issueTypeName,\n            summary: summary,\n            description: description\n        });\n        \n        res.json(result);\n    } catch (error) {\n        console.error('Error creating JIRA issue:', error);\n        res.status(500).json({ error: 'Failed to create JIRA issue' });\n    }\n});\n*/
+            return $http.post(API_BASE_URL + '/issues', issueData);
+        };
+        
+        this.getProjects = function() {
+            return $http.get(API_BASE_URL + '/projects')
+                .then(function(response) {
+                    availableProjects = response.data.values || [];
+                    return response;
+                });
+        };
+        
+        this.getIssueTypes = function(projectKey) {
+            return $http.get(API_BASE_URL + '/projects/' + projectKey + '/issuetypes');
+        };
+        
+        this.getIssue = function(issueKey) {
+            return $http.get(API_BASE_URL + '/issues/' + issueKey);
+        };
+        
+        this.updateIssue = function(issueKey, updateData) {
+            return $http.put(API_BASE_URL + '/issues/' + issueKey, updateData);
+        };
+        
+        this.searchIssues = function(jql, fields) {
+            return $http.post(API_BASE_URL + '/search', {
+                jql: jql,
+                fields: fields || ['summary', 'status', 'assignee', 'priority']
+            });
+        };
+        
+        this.checkHealth = function() {
+            return $http.get('/api/health');
+        };\n        \n        this.formatDescription = function(initiative) {\n            var description = initiative.description;\n            \n            if (initiative.requirements && initiative.requirements.length > 0) {\n                description += '\\n\\n*Requirements:*\\n';\n                initiative.requirements.forEach(function(req) {\n                    description += '* ' + req + '\\n';\n                });\n            }\n            \n            if (initiative.acceptanceCriteria && initiative.acceptanceCriteria.length > 0) {\n                description += '\\n*Acceptance Criteria:*\\n';\n                initiative.acceptanceCriteria.forEach(function(criteria) {\n                    description += '* ' + criteria + '\\n';\n                });\n            }\n            \n            if (initiative.estimatedEffort) {\n                description += '\\n*Estimated Effort:* ' + initiative.estimatedEffort;\n            }\n            \n            return description;\n        };\n        \n        this.mapPriorityToJira = function(priority) {\n            switch(priority && priority.toLowerCase()) {\n                case 'high': return 'High';\n                case 'medium': return 'Medium';\n                case 'low': return 'Low';\n                default: return 'Medium';\n            }\n        };\n    });\n\n/*\nBACKEND IMPLEMENTATION GUIDE:\n\nTo implement real JIRA integration in your backend, create these API endpoints:\n\n1. GET /api/jira/projects\n   - Calls: mcp_atlassian_atl_getVisibleJiraProjects(CLOUD_ID)\n   - Returns: List of accessible JIRA projects\n\n2. GET /api/jira/projects/:projectKey/issuetypes\n   - Calls: mcp_atlassian_atl_getJiraProjectIssueTypesMetadata(CLOUD_ID, projectKey)\n   - Returns: Available issue types for the project\n\n3. POST /api/jira/create-issue\n   - Calls: mcp_atlassian_atl_createJiraIssue(CLOUD_ID, projectKey, issueTypeName, summary, description)\n   - Returns: Created issue details (key, id, url)\n\n4. GET /api/jira/issues/:issueKey\n   - Calls: mcp_atlassian_atl_getJiraIssue(CLOUD_ID, issueKey)\n   - Returns: Issue details\n\n5. PUT /api/jira/issues/:issueKey\n   - Calls: mcp_atlassian_atl_editJiraIssue(CLOUD_ID, issueKey, fields)\n   - Returns: Updated issue\n\nExample Node.js backend endpoint:\n\napp.post('/api/jira/create-issue', async (req, res) => {\n    try {\n        const { projectKey, issueTypeName, summary, description } = req.body;\n        \n        const result = await mcpClient.call('mcp_atlassian_atl_createJiraIssue', {\n            cloudId: CLOUD_ID,\n            projectKey: projectKey,\n            issueTypeName: issueTypeName,\n            summary: summary,\n            description: description\n        });\n        \n        res.json(result);\n    } catch (error) {\n        console.error('Error creating JIRA issue:', error);\n        res.status(500).json({ error: 'Failed to create JIRA issue' });\n    }\n});\n*/

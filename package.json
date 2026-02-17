@@ -1,0 +1,33 @@
+{
+  "name": "fr-to-initiative-jira-backend",
+  "version": "1.0.0",
+  "description": "Backend API for FR to Initiative application with JIRA integration",
+  "main": "jira-mock-server.js",
+  "scripts": {
+    "start": "node jira-mock-server.js",
+    "dev": "nodemon jira-mock-server.js", 
+    "setup": "node configure-jira.js",
+    "test-connection": "node test-jira-connection.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "jira",
+    "api",
+    "initiative",
+    "tracking"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "axios": "^1.6.0",
+    "dotenv": "^16.0.3"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  }
+}

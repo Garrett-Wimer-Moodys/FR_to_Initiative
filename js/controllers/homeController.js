@@ -11,6 +11,7 @@ angular.module('frInitiativeApp')
         $scope.errorMessage = '';
         $scope.fileName = '';
         $scope.aiInstructions = '';
+        $scope.uploadSuccess = false;
         
         // Original features
         $scope.features = [
@@ -31,9 +32,20 @@ angular.module('frInitiativeApp')
             }
         ];
         
-        // File dialog handler
+        // File dialog handler with keyboard support
         $scope.openFileDialog = function() {
-            document.getElementById('fileInput').click();
+            var fileInput = document.getElementById('fileInput');
+            if (fileInput) {
+                fileInput.click();
+            }
+        };
+        
+        // Keyboard handler for accessibility
+        $scope.onKeyPress = function(event) {
+            if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault();
+                $scope.openFileDialog();
+            }
         };
         
         // Handle file selection from dialog
@@ -43,32 +55,66 @@ angular.module('frInitiativeApp')
             }
         };
         
-        // Drag and drop handlers
+        // Enhanced drag and drop handlers
         $scope.onDragEnter = function(event) {
             event.preventDefault();
+            event.stopPropagation();
             $scope.isDragOver = true;
+            $scope.errorMessage = ''; // Clear any previous errors
             $scope.$apply();
         };
         
         $scope.onDragLeave = function(event) {
             event.preventDefault();
-            $scope.isDragOver = false;
-            $scope.$apply();
+            event.stopPropagation();
+            
+            // Only set isDragOver to false if we're leaving the drop zone completely
+            if (!event.currentTarget.contains(event.relatedTarget)) {
+                $scope.isDragOver = false;
+                $scope.$apply();
+            }
         };
         
         $scope.onDragOver = function(event) {
             event.preventDefault();
+            event.stopPropagation();
+            
+            // Add visual feedback for file type validation
+            if (event.dataTransfer.items && event.dataTransfer.items.length > 0) {
+                var item = event.dataTransfer.items[0];
+                if (item.kind === 'file') {
+                    var fileName = item.getAsFile()?.name || '';
+                    if (fileName && !fileName.match(/\.(doc|docx|txt|pdf)$/i)) {
+                        event.dataTransfer.dropEffect = 'none';
+                        return false;
+                    }
+                }
+            }
+            
+            event.dataTransfer.dropEffect = 'copy';
             return false;
         };
         
         $scope.onFileDropped = function(event) {
             event.preventDefault();
+            event.stopPropagation();
             $scope.isDragOver = false;
             
             var files = event.dataTransfer.files;
-            if (files.length > 0) {
-                $scope.processFile(files[0]);
+            
+            if (files.length === 0) {
+                $scope.errorMessage = 'No files detected. Please try again.';
+                $scope.$apply();
+                return;
             }
+            
+            if (files.length > 1) {
+                $scope.errorMessage = 'Please drop only one file at a time.';
+                $scope.$apply();
+                return;
+            }
+            
+            $scope.processFile(files[0]);
             $scope.$apply();
         };
         
@@ -79,14 +125,12 @@ angular.module('frInitiativeApp')
             $scope.errorMessage = '';
             $scope.aiInstructions = '';
             
-            // Validate file type
-            if (!file.name.match(/\.(doc|docx)$/i)) {
-                $scope.errorMessage = 'Please select a Word document (.doc or .docx file).';
-                $scope.$apply();
-                return;
-            }
-            
-            // Validate file size (10MB limit)
+        // Validate file type (support more document formats)
+        if (!file.name.match(/\.(doc|docx|txt|pdf)$/i)) {
+            $scope.errorMessage = 'Please select a supported document (.doc, .docx, .txt, or .pdf file).';
+            $scope.$apply();
+            return;
+        }            // Validate file size (10MB limit)
             if (file.size > 10 * 1024 * 1024) {
                 $scope.errorMessage = 'File size must be less than 10MB.';
                 $scope.$apply();
@@ -95,6 +139,14 @@ angular.module('frInitiativeApp')
             
             $scope.fileName = file.name;
             $scope.isProcessing = true;
+            
+            // Add success visual feedback
+            $scope.uploadSuccess = true;
+            setTimeout(function() {
+                $scope.$apply(function() {
+                    $scope.uploadSuccess = false;
+                });
+            }, 1000);
             
             // Simulate file processing for functional requirements
             $scope.simulateFileConversion(file);

@@ -3,9 +3,89 @@
     <div class="col-12">
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h2>{{pageTitle}}</h2>
-            <button class="btn btn-primary" ng-click="toggleAddForm()" ng-hide="requirementsData">
-                <i class="fas fa-plus me-2"></i>Add Initiative
-            </button>
+            <div>
+                <button class="btn btn-secondary me-2" ng-click="toggleFileUpload()" ng-show="showAIResults">
+                    <i class="fas fa-upload me-2"></i>Add More Files
+                </button>
+                <button class="btn btn-primary" ng-click="toggleAddForm()" ng-hide="requirementsData">
+                    <i class="fas fa-plus me-2"></i>Add Initiative
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Additional File Upload Section -->
+<div ng-show="showFileUpload" class="row mb-4">
+    <div class="col-12">
+        <div class="card border-info">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-plus-circle me-2"></i>
+                    Add Additional Requirements Document
+                </h5>
+            </div>
+            <div class="card-body">
+                <!-- File Drop Zone for Additional Files -->
+                <div class="file-drop-zone bg-light text-dark rounded p-3 mb-3" 
+                     ng-class="{'drag-over': isDragOver}"
+                     ng-drop="onFileDroppedAdditional($event)" 
+                     ng-drag-enter="onDragEnterAdditional($event)"
+                     ng-drag-leave="onDragLeaveAdditional($event)"
+                     ng-drag-over="onDragOverAdditional($event)"
+                     style="min-height: 120px; border: 2px dashed #17a2b8;">
+                    
+                    <div class="text-center d-flex flex-column justify-content-center h-100">
+                        <i class="fas fa-file-plus fa-2x text-info mb-2" 
+                           ng-class="{'fa-bounce': isDragOver}"></i>
+                        
+                        <h6 class="text-dark mb-1" ng-show="!isDragOver">
+                            Drop additional document here
+                        </h6>
+                        <h6 class="text-success mb-1" ng-show="isDragOver">
+                            <i class="fas fa-check-circle me-1"></i>Release to upload
+                        </h6>
+                        
+                        <p class="text-muted mb-2 small">
+                            Supports: Word (.doc, .docx), PDF, and Text files (Max: 10MB)
+                        </p>
+                        
+                        <!-- Additional File Input -->
+                        <input type="file" 
+                               id="additionalFileInput" 
+                               accept=".doc,.docx,.txt,.pdf"
+                               style="display: none;"
+                               ng-file-select="onAdditionalFileSelected($files)">
+                        
+                        <button class="btn btn-outline-info btn-sm" 
+                                ng-click="openAdditionalFileDialog()"
+                                ng-disabled="isProcessingNewFile">
+                            <i class="fas fa-folder-open me-1"></i>
+                            Browse Files
+                        </button>
+                        
+                        <!-- Error Display -->
+                        <div ng-show="uploadErrorMessage" class="alert alert-danger mt-2 mb-0 small">
+                            <i class="fas fa-exclamation-triangle me-1"></i>
+                            {{uploadErrorMessage}}
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Processing Indicator for Additional File -->
+                <div ng-show="isProcessingNewFile" class="text-center py-3">
+                    <div class="spinner-border text-info mb-2" role="status">
+                        <span class="visually-hidden">Processing...</span>
+                    </div>
+                    <p class="text-muted mb-0">Processing additional document...</p>
+                </div>
+                
+                <div class="text-end">
+                    <button class="btn btn-outline-secondary" ng-click="toggleFileUpload()">
+                        <i class="fas fa-times me-1"></i>Cancel
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
 </div>
